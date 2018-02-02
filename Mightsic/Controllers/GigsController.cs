@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNet.Identity;
 using Mightsic.Models;
 using Mightsic.ViewModels;
-using System;
 using System.Linq;
 using System.Web.Mvc;
 namespace Mightsic.Controllers
@@ -23,18 +22,21 @@ namespace Mightsic.Controllers
             };
             return View(viewModel);
         }
+
         [Authorize]
         [HttpPost]
         public ActionResult Create(GigFormViewModel viewModel)
         {
-            var artistId = User.Identity.GetUserId();
-            var artist = _context.Users.Single(u => u.Id == artistId);
-            var genre = _context.Genres.Single(g => g.Id == viewModel.Genre);
+            if (!ModelState.IsValid)
+            {
+                viewModel.Genres = _context.Genres.ToList();
+                return View("Create", viewModel);
+            }
             var gig = new Gig
             {
-                Artist = artist,
-                DateTime = DateTime.Parse(string.Format("{0} {1}", viewModel.Date, viewModel.Time)),
-                Genre = genre,
+                ArtistId = User.Identity.GetUserId(),
+                DateTime = viewModel.GetDateTime(),
+                GenreId = viewModel.Genre,
                 Venue = viewModel.Venue
             };
             _context.Gigs.Add(gig);
